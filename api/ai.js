@@ -40,7 +40,8 @@ async function handleText(body, apiKey, apiBase, res) {
       : { type: 'json_object' };
   }
 
-  var r = await fetch(apiBase + '/api/v1/chat/completions', {
+  var url = apiBase + '/api/v1/chat/completions';
+  var r = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + apiKey },
     body: JSON.stringify(fb),
@@ -51,7 +52,10 @@ async function handleText(body, apiKey, apiBase, res) {
     return res.status(r.status).json({ error: 'AI service error', detail: data });
   }
 
-  var content = (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || '';
+  var content = '';
+  if (data.choices && data.choices.length > 0 && data.choices[0].message) {
+    content = data.choices[0].message.content || '';
+  }
 
   if (jsonMode) {
     try {
@@ -81,7 +85,8 @@ async function handleImage(body, apiKey, apiBase, res) {
     });
   }
 
-  var r = await fetch(apiBase + '/api/v1/chat/completions', {
+  var url = apiBase + '/api/v1/chat/completions';
+  var r = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + apiKey },
     body: JSON.stringify({ model: model, messages: [{ role: 'user', content: parts }] }),
@@ -92,9 +97,9 @@ async function handleImage(body, apiKey, apiBase, res) {
     return res.status(r.status).json({ error: 'AI image error', detail: data });
   }
 
-  var url = extractUrl(data);
-  if (!url) return res.status(500).json({ error: 'AI 未能生成有效的图像。' });
-  res.status(200).json({ url: url });
+  var found = extractUrl(data);
+  if (!found) return res.status(500).json({ error: 'AI 未能生成有效的图像。' });
+  res.status(200).json({ url: found });
 }
 
 function extractUrl(data) {
@@ -114,7 +119,7 @@ function extractUrl(data) {
     if (typeof data.data.b64_json === 'string') return 'data:image/png;base64,' + data.data.b64_json;
     if (typeof data.data.url === 'string' && data.data.url) return data.data.url.startsWith('data:') ? data.data.url : 'data:image/png;base64,' + data.data.url;
   }
-  var msg = data.choices && data.choices[0] && data.choices[0].message;
+  var msg = data.choices && data.choices.length > 0 ? data.choices[0].message : null;
   if (msg) {
     if (typeof msg.content === 'string') {
       var m = msg.content.match(/data:image\/[a-z]+;base64,[A-Za-z0-9+/=]+/);
