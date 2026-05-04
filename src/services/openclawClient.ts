@@ -6,8 +6,8 @@
 const API_BASE = import.meta.env.VITE_OPENCLAW_API_BASE || 'https://openclaw-api.com';
 const API_KEY = import.meta.env.VITE_OPENCLAW_API_KEY;
 
-// Production: use serverless proxy. Dev: fall back to direct calls (proxy has no API key locally).
-const USE_PROXY = !import.meta.env.DEV && API_KEY === undefined;
+// Production: always use serverless proxy. Dev: fall back to direct calls.
+const USE_PROXY = !import.meta.env.DEV;
 
 const TEXT_MODEL = 'gemini-3.1-pro-preview';
 const IMAGE_MODEL = 'gemini-3.1-flash-image';
